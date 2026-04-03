@@ -24,8 +24,8 @@ try:
 except ImportError:
     HAS_OPENGL = False
 
-from tf_tree import TFTree
-from ros_message import Quaternion
+from unity_tf_listener.tf_tree import TFTree
+from unity_tf_listener.ros_message import Quaternion
 
 
 AXIS_LENGTH = 0.3
@@ -217,7 +217,8 @@ class TFViewport(QOpenGLWidget):
     #  Drawing                                                             #
     # ------------------------------------------------------------------ #
 
-    def _draw_grid(self):
+    @staticmethod
+    def _draw_grid():
         glLineWidth(0.5)
         glBegin(GL_LINES)
         n = int(WORLD_GRID / GRID_STEP)
@@ -232,13 +233,14 @@ class TFViewport(QOpenGLWidget):
         glEnd()
         glLineWidth(1.5)
 
-    def _draw_world_axes(self):
-        L = 0.5
+    @staticmethod
+    def _draw_world_axes():
+        l = 0.5
         glLineWidth(2.5)
         glBegin(GL_LINES)
-        glColor3f(1.0, 0.2, 0.2); glVertex3f(0,0,0); glVertex3f(L,0,0)   # X red
-        glColor3f(0.2, 1.0, 0.2); glVertex3f(0,0,0); glVertex3f(0,L,0)   # Y green
-        glColor3f(0.2, 0.4, 1.0); glVertex3f(0,0,0); glVertex3f(0,0,L)   # Z blue
+        glColor3f(1.0, 0.2, 0.2); glVertex3f(0,0,0); glVertex3f(l,0,0)   # X red
+        glColor3f(0.2, 1.0, 0.2); glVertex3f(0,0,0); glVertex3f(0,l,0)   # Y green
+        glColor3f(0.2, 0.4, 1.0); glVertex3f(0,0,0); glVertex3f(0,0,l)   # Z blue
         glEnd()
         glLineWidth(1.5)
 
@@ -262,13 +264,13 @@ class TFViewport(QOpenGLWidget):
 
             is_selected = (frame == self._selected_frame)
             scale = 1.5 if is_selected else 1.0
-            L = AXIS_LENGTH * scale
+            l = AXIS_LENGTH * scale
 
             glLineWidth(3.0 if is_selected else 2.0)
             glBegin(GL_LINES)
-            glColor3f(1.0, 0.25, 0.25); glVertex3f(0,0,0); glVertex3f(L,0,0)
-            glColor3f(0.25, 1.0, 0.25); glVertex3f(0,0,0); glVertex3f(0,L,0)
-            glColor3f(0.25, 0.5,  1.0); glVertex3f(0,0,0); glVertex3f(0,0,L)
+            glColor3f(1.0, 0.25, 0.25); glVertex3f(0,0,0); glVertex3f(l,0,0)
+            glColor3f(0.25, 1.0, 0.25); glVertex3f(0,0,0); glVertex3f(0,l,0)
+            glColor3f(0.25, 0.5,  1.0); glVertex3f(0,0,0); glVertex3f(0,0,l)
             glEnd()
             glLineWidth(1.5)
 
@@ -314,7 +316,7 @@ class TFViewport(QOpenGLWidget):
         glRotatef(-self._pitch, 1, 0, 0)
         glRotatef(-self._yaw,   0, 0, 1)
 
-        glClear(GL_DEPTH_BUFFER_BIT)   # don't wipe colour — inset overlay
+        glClear(GL_DEPTH_BUFFER_BIT)   # don't wipe color — inset overlay
         glLineWidth(2.5)
 
         L = 0.8
@@ -337,7 +339,8 @@ class TFViewport(QOpenGLWidget):
         # Restore full viewport
         glViewport(0, 0, w, h)
 
-    def _draw_sphere(self, r: float, slices: int = 8):
+    @staticmethod
+    def _draw_sphere(r: float, slices: int = 8):
         glBegin(GL_LINES)
         for i in range(slices):
             lat0 = math.pi * (-0.5 + i / slices)
@@ -384,12 +387,13 @@ class TFViewport(QOpenGLWidget):
             self._pan_y -= dy * 0.005 * self._dist
 
     def wheelEvent(self, e: QWheelEvent):
-        # Stop animation so zoom doesn't fight the tween
+        # Stop animation so Zoom doesn't fight the tween
         self._anim_steps = 0
         self._dist *= 0.9 if e.angleDelta().y() > 0 else 1.1
         self._dist = max(0.1, min(100.0, self._dist))
 
     def keyPressEvent(self, e):
+        # noinspection PyTypeChecker
         shift = bool(e.modifiers() & Qt.KeyboardModifier.ShiftModifier)
         key   = e.key()
 

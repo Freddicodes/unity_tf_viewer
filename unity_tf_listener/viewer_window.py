@@ -5,12 +5,11 @@ Left panel: frame list + details. Right: 3D viewport. Bottom: status log.
 
 import math
 import time
-from typing import Dict, Optional
+from typing import Optional
 
-from PyQt6.QtCore import QObject, Qt, QThread, QTimer, pyqtSignal
-from PyQt6.QtGui import QColor, QFont, QIcon, QPalette
+from PyQt6.QtCore import QObject, Qt, QTimer, pyqtSignal
+from PyQt6.QtGui import QColor, QFontDatabase
 from PyQt6.QtWidgets import (
-    QFrame,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -19,17 +18,15 @@ from PyQt6.QtWidgets import (
     QListWidgetItem,
     QMainWindow,
     QPushButton,
-    QSizePolicy,
     QSplitter,
     QTextEdit,
     QVBoxLayout,
     QWidget,
 )
 
-from gl_viewport import HAS_OPENGL, TFViewport
-from ros_message import TransformStamped
-from tcp_listener import TFListener
-from tf_tree import TFTree
+from unity_tf_listener.gl_viewport import HAS_OPENGL, TFViewport
+from unity_tf_listener.tcp_listener import TFListener
+from unity_tf_listener.tf_tree import TFTree
 
 DARK_BG = "#0f0f12"
 PANEL_BG = "#16161c"
@@ -41,11 +38,29 @@ SUCCESS = "#3ddc84"
 WARNING = "#ffb74d"
 DANGER = "#ff5c5c"
 
-STYLESHEET = f"""
+
+def _resolve_monospace_font() -> str:
+    """
+    Return the name of the first available monospace font from a preference
+    list, falling back to Qt's built-in fixed-pitch family.
+    Must be called after QApplication is constructed.
+    """
+    available = set(QFontDatabase.families())
+    preferred = ["JetBrainsMono Nerd Font", "Menlo", "Monaco", "Courier New", "Courier"]
+
+    for name in preferred:
+        if name in available:
+            return name
+    # QFontDatabase.systemFont gives us the real fixed font Qt will use
+    return QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont).family()
+
+
+def _make_stylesheet(mono: str) -> str:
+    return f"""
 QMainWindow, QWidget {{
     background: {DARK_BG};
     color: {TEXT_MAIN};
-    font-family: "JetBrains Mono", "SF Mono", "Menlo", monospace;
+    font-family: "{mono}";
     font-size: 12px;
 }}
 QGroupBox {{
@@ -90,7 +105,7 @@ QTextEdit {{
     border: 1px solid {BORDER};
     border-radius: 4px;
     color: {TEXT_DIM};
-    font-family: "JetBrains Mono", "SF Mono", "Menlo", monospace;
+    font-family: "{mono}";
     font-size: 10px;
     padding: 4px;
 }}
@@ -107,7 +122,7 @@ QPushButton {{
     border: 1px solid {BORDER};
     border-radius: 3px;
     color: {TEXT_DIM};
-    font-family: "JetBrains Mono", "SF Mono", "Menlo", monospace;
+    font-family: "{mono}";
     font-size: 10px;
     padding: 2px 7px;
     min-width: 26px;
@@ -162,7 +177,8 @@ class ViewerWindow(QMainWindow):
     def _setup_ui(self):
         self.setWindowTitle("ROS TF Viewer")
         self.resize(1280, 800)
-        self.setStyleSheet(STYLESHEET)
+        _resolve_monospace_font()
+        self.setStyleSheet(_make_stylesheet(_resolve_monospace_font()))
 
         central = QWidget()
         self.setCentralWidget(central)
@@ -280,7 +296,7 @@ class ViewerWindow(QMainWindow):
     def _on_view_changed(self, label: str):
         """Called by the viewport when the active view changes."""
         # Figure out which key matches this label (if any)
-        from gl_viewport import AXIS_VIEWS
+        from unity_tf_listener.gl_viewport import AXIS_VIEWS
 
         matched_key = None
         for key, (_, _, lbl) in AXIS_VIEWS.items():
@@ -295,8 +311,11 @@ class ViewerWindow(QMainWindow):
             is_active = key == active_key
             btn.setProperty("active", "true" if is_active else "false")
             # Force QSS repaint
-            btn.style().unpolish(btn)
-            btn.style().polish(btn)
+            style = btn.style()
+            if style is None:
+                return
+            style.unpolish(btn)
+            style.polish(btn)
 
     def _make_left_panel(self) -> QWidget:
         panel = QWidget()
@@ -409,7 +428,8 @@ class ViewerWindow(QMainWindow):
         layout.addWidget(self._log)
         return group
 
-    def _make_fallback_widget(self) -> QLabel:
+    @staticmethod
+    def _make_fallback_widget() -> QLabel:
         lbl = QLabel(
             "⚠  PyOpenGL not installed.\n\n"
             "Install with:\n  pip install PyOpenGL PyOpenGL_accelerate\n\n"

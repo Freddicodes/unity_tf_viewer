@@ -67,7 +67,7 @@ class Transform:
 @dataclass
 class TransformStamped:
     sec: int = 0
-    nanosec: int = 0          # ROS1 calls this nsec; normalised to nanosec
+    nanosec: int = 0          # ROS1 calls this nsec; normalized to nanosec
     frame_id: str = ""
     child_frame_id: str = ""
     transform: Transform = field(default_factory=Transform)
@@ -83,7 +83,7 @@ class TransformStamped:
 # ---------------------------------------------------------------------------
 
 class ROS1Reader:
-    """Plain little-endian binary reader for ROS1 message serialisation."""
+    """Plain little-endian binary reader for ROS1 message serialization."""
 
     def __init__(self, data: bytes, offset: int = 0):
         self._d = data
@@ -262,6 +262,7 @@ def _detect_format(payload: bytes) -> Tuple[bool, bool]:
 # Public API
 # ---------------------------------------------------------------------------
 
+# noinspection PyBroadException
 def parse_tf_payload(payload: bytes) -> List[TransformStamped]:
     """
     Parse a tf2_msgs/TFMessage payload, auto-detecting ROS1 vs ROS2 CDR.
@@ -297,6 +298,7 @@ def parse_tf_payload(payload: bytes) -> List[TransformStamped]:
         return []
 
 
+# noinspection PyBroadException
 def parse_wire_frame(data: bytes) -> Optional[Tuple[str, bytes]]:
     """
     Parse one ros_tcp_connector wire frame.

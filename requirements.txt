@@ -1,3 +1,5 @@
 PyQt6>=6.4.0
 PyOpenGL>=3.1.7
 PyOpenGL-accelerate>=3.1.7; platform_machine != "arm64"
+
+pyqt6-sip

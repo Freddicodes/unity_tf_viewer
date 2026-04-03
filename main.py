@@ -8,8 +8,8 @@ No rclpy or ROS installation required.
 import sys
 import threading
 from PyQt6.QtWidgets import QApplication
-from tcp_listener import TFListener
-from viewer_window import ViewerWindow
+from unity_tf_listener.tcp_listener import TFListener
+from unity_tf_listener.viewer_window import ViewerWindow
 
 
 def main():

@@ -3,10 +3,10 @@ tcp_listener.py — TCP server that accepts ros_tcp_connector connections
 and emits parsed TF transforms via callbacks.
 
 ros_tcp_connector acts as the TCP *client*; this viewer acts as the server
-(matching the behaviour of the ROS TCP Endpoint node).
+(matching the behavior of the ROS TCP Endpoint node).
 
 Handles:
-  - ROS1 and ROS2 serialisation (auto-detected per message)
+  - ROS1 and ROS2 serialization (auto-detected per message)
   - /tf and /tf_static topics (static transforms are kept indefinitely)
   - The ros_tcp_connector subscriber-registration handshake message
     (topic = "__topic_registration__" or similar; silently ignored)
@@ -17,7 +17,7 @@ import socket
 import struct
 import threading
 from typing import Callable, Dict, List, Optional
-from ros_message import parse_wire_frame, parse_tf_payload, TransformStamped
+from unity_tf_listener.ros_message import parse_wire_frame, parse_tf_payload, TransformStamped
 
 
 # Topics that carry tf2_msgs/TFMessage
@@ -238,6 +238,7 @@ class TFListener:
     # Internal — callbacks
     # ------------------------------------------------------------------
 
+    # noinspection PyBroadException
     def _emit_update(self):
         snapshot = self.get_transforms()
         for cb in self._update_callbacks:
@@ -246,6 +247,7 @@ class TFListener:
             except Exception:
                 pass
 
+    # noinspection PyBroadException
     def _status(self, msg: str):
         for cb in self._status_callbacks:
             try:
