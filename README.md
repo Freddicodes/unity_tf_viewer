@@ -1,6 +1,6 @@
 # ROS TF Viewer
 
-A standalone macOS viewer for ROS2 TF transforms received via **ros_tcp_connector**.
+A standalone macOS viewer for ROS2 TF transforms received via [ros_tcp_connector](https://github.com/Unity-Technologies/ROS-TCP-Connector).
 No ROS installation, no `rclpy` — just Python + PyQt6 + PyOpenGL.
 
 ---
